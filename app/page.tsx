@@ -123,12 +123,14 @@ export default function Home() {
     }
 
     setFiles(mappedFiles);
-    setStage(mappedFiles.length >= 2 ? "uploaded" : "empty");
+    setStage(mappedFiles.length > 0 ? "uploaded" : "empty");
     setError(null);
     setUploadMessage(
       mappedFiles.length >= 2
         ? `Uploaded ${mappedFiles.length} files successfully. Ready to map.`
-        : "One file selected. Please upload the second file to continue."
+        : mappedFiles.length === 1
+          ? `1 file selected: ${mappedFiles[0].name}. Please upload the second file to continue.`
+          : "No file selected yet."
     );
     event.target.value = "";
   };
@@ -212,6 +214,7 @@ export default function Home() {
     : activeQuestion?.answerRegions?.length
       ? activeQuestion.answerRegions
       : [activeQuestion?.answerRegion ?? { x: 15, y: 30, width: 40, height: 18 }];
+  const hasBothFiles = files.length >= 2;
 
   return (
     <div className="app-shell min-h-screen bg-[#3d3b39] p-2 sm:p-3 md:p-4 lg:p-6">
@@ -393,8 +396,8 @@ export default function Home() {
 
                 <button
                   onClick={startMapping}
-                  disabled={isSubmitting}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={!hasBothFiles || isSubmitting}
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#2a2a2a]"
                 >
                   {isSubmitting ? "Processing..." : "Start Mapping"} <span aria-hidden>→</span>
                 </button>
@@ -414,17 +417,14 @@ export default function Home() {
             {stage === "processing" && (
               <div className="flex min-h-[760px] flex-col items-center justify-center gap-6 px-8 text-center">
                 <div className="relative flex h-24 w-24 items-center justify-center">
-                  <div className="absolute inset-0 rotate-45 rounded-[26%] bg-[#f2672a]" />
-                  <div className="absolute left-3 top-3 h-3 w-3 rounded-full bg-white/80" />
-                  <div className="absolute right-3 top-3 h-3 w-3 rounded-full bg-white/80" />
-                  <div className="absolute bottom-3 left-3 h-3 w-3 rounded-full bg-white/80" />
-                  <div className="absolute bottom-3 right-3 h-3 w-3 rounded-full bg-white/80" />
-                  <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+                  <div className="absolute inset-0 rounded-full border-[10px] border-[#f4c6b0] border-t-[#f2672a] animate-spin" />
+                  <div className="absolute inset-5 rounded-full bg-[#f9f4f1]" />
+                  <div className="absolute inset-0 rounded-full bg-[#f2672a]/10 blur-md" />
                 </div>
 
                 <div>
-                  <div className="text-[2.2rem] font-black tracking-[-0.08em] text-[#1d1d1d]">Extracting...</div>
-                  <div className="mt-1 text-lg text-[#5d5d5d]">This may take a while</div>
+                  <div className="text-[2rem] font-black tracking-[-0.08em] text-[#1d1d1d] sm:text-[2.2rem]">Processing files...</div>
+                  <div className="mt-2 text-base text-[#5d5d5d] sm:text-lg">Extracting questions and matching answers</div>
                 </div>
               </div>
             )}
