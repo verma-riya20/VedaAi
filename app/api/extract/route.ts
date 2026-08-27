@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const { createCanvas } = await import("canvas");
 
 const { parseQuestions, matchAnswersToQuestions } = require("@/lib/extraction");
 
@@ -8,22 +12,83 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 async function extractTextFromPdf(file: File) {
   const bytes = await file.arrayBuffer();
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const workerPath = path.join(
+    process.cwd(),
+    "node_modules",
+    "pdfjs-dist",
+    "legacy",
+    "build",
+    "pdf.worker.mjs"
+  );
 
-  const loadingTask = pdfjs.getDocument({ data: bytes });
-  const pdf = await loadingTask.promise;
+  pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
 
   let text = "";
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item: any) => ("str" in item ? item.str : ""))
-      .join(" ");
-    text += `${pageText}\n`;
+  try {
+    const loadingTask = pdfjs.getDocument({ data: bytes });
+    const pdf = await loadingTask.promise;
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item: any) => ("str" in item ? item.str : ""))
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (pageText) {
+        text += `${pageText}\n`;
+      }
+
+      if (!pageText || pageText.length < 20) {
+        const fallbackText = await ocrPdfPage(page);
+        if (fallbackText && fallbackText.trim().length > 10) {
+          text += `${fallbackText}\n`;
+        }
+      }
+    }
+  } catch (error) {
+    console.warn("PDF.js extraction failed; using raw-PDF fallback.", error);
   }
 
+  const normalizedText = text.trim();
+  if (normalizedText) {
+    return normalizedText;
+  }
+
+  return extractTextFromRawPdfBytes(bytes);
+}
+
+function extractTextFromRawPdfBytes(bytes: ArrayBuffer) {
+  const raw = Buffer.from(bytes).toString("latin1");
+  const matches = raw.match(/\((?:\\.|[^()\\])*\)/g) || [];
+
+  const text = matches
+    .map((match) => match.slice(1, -1).replace(/\\([nrtbf()\\])/g, "").replace(/\\([0-7]{1,3})/g, (_, code) => String.fromCharCode(parseInt(code, 8))).replace(/\\\(/g, "(").replace(/\\\)/g, ")").replace(/\\\s+/g, " "))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+
   return text;
+}
+
+async function ocrPdfPage(page: any) {
+  try {
+    const viewport = page.getViewport({ scale: 1.4 });
+    const canvas = createCanvas(viewport.width, viewport.height);
+    const context = canvas.getContext("2d");
+
+    await page.render({ canvasContext: context, viewport }).promise;
+
+    const { default: Tesseract } = await import("tesseract.js");
+    const result = await Tesseract.recognize(canvas.toBuffer("image/png"), "eng");
+    return result?.data?.text || "";
+  } catch (error) {
+    console.warn("PDF OCR fallback failed for page.", error);
+    return "";
+  }
 }
 
 async function extractTextFromImage(file: File) {
@@ -43,6 +108,22 @@ async function extractTextFromFile(file: File) {
   return extractTextFromImage(file);
 }
 
+async function withTimeout<T>(operation: Promise<T>, ms: number, label: string): Promise<T> {
+  let timeoutId: NodeJS.Timeout | undefined;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+  });
+
+  try {
+    return await Promise.race([operation, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -53,8 +134,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Both question paper and answer sheet are required." }, { status: 400 });
     }
 
-    const questionText = await extractTextFromFile(questionPaper);
-    const answerText = await extractTextFromFile(answerSheet);
+    const questionText = await withTimeout(
+      extractTextFromFile(questionPaper),
+      45000,
+      "Question paper extraction"
+    );
+    const answerText = await withTimeout(
+      extractTextFromFile(answerSheet),
+      45000,
+      "Answer sheet extraction"
+    );
+
+    if (!questionText.trim() || !answerText.trim()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "No readable text found in uploaded files.",
+          questions: [],
+          summary: null,
+          unmatchedAnswers: [],
+        },
+        { status: 422 }
+      );
+    }
 
     const aiStructured = await extractWithGemini(questionText, answerText);
     const questions = aiStructured?.questions?.length ? aiStructured.questions : parseQuestions(questionText);
