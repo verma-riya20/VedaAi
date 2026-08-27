@@ -126,11 +126,9 @@ export default function Home() {
     setStage(mappedFiles.length > 0 ? "uploaded" : "empty");
     setError(null);
     setUploadMessage(
-      mappedFiles.length >= 2
-        ? `Uploaded ${mappedFiles.length} files successfully. Ready to map.`
-        : mappedFiles.length === 1
-          ? `1 file selected: ${mappedFiles[0].name}. Please upload the second file to continue.`
-          : "No file selected yet."
+      mappedFiles.length === 1
+        ? `1 file selected: ${mappedFiles[0].name}. Please upload the second file to continue.`
+        : ""
     );
     event.target.value = "";
   };
@@ -139,9 +137,9 @@ export default function Home() {
     const nextFiles = files.filter((file) => file.id !== id);
     setFiles(nextFiles);
     setUploadMessage(
-      nextFiles.length > 0
-        ? `${nextFiles.length} file${nextFiles.length > 1 ? "s" : ""} remaining. Upload the missing file to continue.`
-        : "No files uploaded yet. Please choose both files."
+      nextFiles.length === 1
+        ? `1 file selected: ${nextFiles[0].name}. Please upload the second file to continue.`
+        : ""
     );
     if (nextFiles.length === 0) setStage("empty");
   };
@@ -363,74 +361,75 @@ export default function Home() {
             )}
 
             {stage === "uploaded" && (
-              <div className="flex min-h-[760px] flex-col items-center justify-center px-6 pb-14 pt-6 text-center sm:px-8 sm:pt-8">
-                <div className="mb-5 flex flex-col items-center">
-                  <div className="mb-4 w-full max-w-[980px] text-center text-[2rem] font-black leading-[1.04] tracking-[-0.065em] text-[#1f1f1f] sm:text-[2.5rem] md:text-[3rem] lg:text-[3.2rem]">
-                    Upload <span className="inline-block rounded-[0.45em] bg-[#f9e7df] px-2 py-1 text-[#f2672a]">Question Paper &amp; Answer Sheets</span>
-                  </div>
-                  <p className="text-base text-[#525252] sm:text-lg">Upload both files to get started</p>
+              <div className="flex min-h-[760px] flex-col items-center justify-center px-6 pb-16 pt-10 text-center sm:px-8">
+                <div className="mb-5 text-center text-[1.9rem] font-black leading-none tracking-[-0.065em] text-[#1f1f1f] sm:text-[2.15rem]">
+                  Upload both files to get started
                 </div>
 
-                <div className="relative mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-[#f8d7cb] ring-[18px] ring-[#f3d0c2] sm:h-32 sm:w-32">
-                  <div className="absolute inset-0 rounded-full border-[2px] border-[#f2672a]/50" />
-                  <div className="absolute inset-[18px] rounded-full bg-[#f4b4a3]" />
-                  <div className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
-                  <div className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
-                  <div className="absolute left-3 bottom-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
-                  <div className="absolute right-3 bottom-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
-                  <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f2672a]" />
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#f9f4f1] text-2xl shadow-sm sm:h-20 sm:w-20 sm:text-3xl">
+                <div className="relative mb-7 flex h-[170px] w-[170px] items-center justify-center rounded-full bg-[#f5d4c8] ring-[15px] ring-[#f1c3b1] sm:h-[182px] sm:w-[182px]">
+                  <div className="absolute inset-[18px] rounded-full border-[2px] border-[#f3a77d]/60" />
+                  <div className="absolute left-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-[#f2672a]" />
+                  <div className="absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-1/2 top-1 h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-1/2 bottom-1 h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-5 top-7 h-3.5 w-3.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute right-5 top-7 h-3.5 w-3.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-5 bottom-7 h-3.5 w-3.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute right-5 bottom-7 h-3.5 w-3.5 rounded-full bg-[#f2672a]" />
+                  <div className="relative flex h-[82px] w-[82px] items-center justify-center rounded-full bg-[#f9f4f1] text-[2.3rem] shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
                     👩‍🏫
                   </div>
                 </div>
 
-                {uploadMessage && (
-                  <div className="mb-5 w-full max-w-[760px] rounded-2xl border border-[#d8ebd8] bg-[#edf9ee] px-4 py-3 text-sm font-medium text-[#1e5d2f] shadow-sm">
+                {files.length === 1 && uploadMessage && (
+                  <div className="mb-6 w-full max-w-[920px] rounded-[20px] border border-[#cfe9d5] bg-[#dfeee4] px-6 py-4 text-center text-[1.05rem] font-semibold text-[#1b5d38] shadow-[inset_0_0_0_1px_rgba(36,123,77,0.05)]">
                     {uploadMessage}
                   </div>
                 )}
 
                 <div className="w-full max-w-[760px]">
                   {files.length === 1 && (
-                    <div className="mx-auto w-full max-w-[520px] rounded-[22px] border-[2px] border-dashed border-[#d8d3cf] bg-[#f8f7f5] px-4 py-3 text-left shadow-sm sm:px-5 sm:py-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-xs">
-                            PDF
+                    <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-4 rounded-[24px] border-[2px] border-dashed border-[#d7d1cd] bg-[#f7f6f4] px-4 py-4 text-left shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] sm:px-5">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-12 sm:w-12">
+                          PDF
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-[1.05rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.4rem]">
+                            {files[0].name}
                           </div>
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold text-[#202020] sm:text-base">{files[0].name}</div>
-                            <div className="mt-1 text-[0.7rem] text-[#6b6b6b] sm:text-xs">
-                              {formatBytes(files[0].size)} • {files[0].pages} Pages
-                            </div>
+                          <div className="mt-1 text-[0.8rem] font-medium text-[#6f6f6f] sm:text-[0.9rem]">
+                            {formatBytes(files[0].size)} • {files[0].pages} Pages
                           </div>
                         </div>
-
-                        <button
-                          onClick={() => handleRemove(files[0].id)}
-                          className="grid h-8 w-8 place-items-center rounded-full bg-[#2e2e2e] text-lg text-white shadow-sm transition hover:bg-[#1d1d1d]"
-                          aria-label={`Remove ${files[0].name}`}
-                        >
-                          ×
-                        </button>
                       </div>
+
+                      <button
+                        onClick={() => handleRemove(files[0].id)}
+                        className="grid h-10 w-10 place-items-center rounded-full bg-[#2b2b2b] text-2xl font-light leading-none text-white shadow-sm transition hover:bg-[#1b1b1b]"
+                        aria-label={`Remove ${files[0].name}`}
+                      >
+                        ×
+                      </button>
                     </div>
                   )}
 
                   {files.length >= 2 && (
-                    <div className="grid gap-4 sm:gap-5 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {files.map((file) => (
                         <div
                           key={file.id}
-                          className="relative flex items-center justify-between rounded-[22px] border-[2px] border-dashed border-[#d8d3cf] bg-[#f8f7f5] px-4 py-3 text-left shadow-sm sm:px-5 sm:py-4"
+                          className="relative flex items-center justify-between rounded-[24px] border-[2px] border-dashed border-[#d7d1cd] bg-[#f7f6f4] px-4 py-4 text-left shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] sm:px-5"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-xs">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-12 sm:w-12">
                               PDF
                             </div>
                             <div className="min-w-0">
-                              <div className="truncate text-sm font-semibold text-[#202020] sm:text-base">{file.name}</div>
-                              <div className="mt-1 text-[0.7rem] text-[#6b6b6b] sm:text-xs">
+                              <div className="truncate text-[1.05rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.4rem]">
+                                {file.name}
+                              </div>
+                              <div className="mt-1 text-[0.8rem] font-medium text-[#6f6f6f] sm:text-[0.9rem]">
                                 {formatBytes(file.size)} • {file.pages} Pages
                               </div>
                             </div>
@@ -438,7 +437,7 @@ export default function Home() {
 
                           <button
                             onClick={() => handleRemove(file.id)}
-                            className="grid h-8 w-8 place-items-center rounded-full bg-[#2e2e2e] text-lg text-white shadow-sm transition hover:bg-[#1d1d1d]"
+                            className="grid h-10 w-10 place-items-center rounded-full bg-[#2b2b2b] text-2xl font-light leading-none text-white shadow-sm transition hover:bg-[#1b1b1b]"
                             aria-label={`Remove ${file.name}`}
                           >
                             ×
@@ -452,20 +451,14 @@ export default function Home() {
                 <button
                   onClick={startMapping}
                   disabled={!hasBothFiles || isSubmitting}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#2a2a2a]"
+                  className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#2b2b2b] px-8 py-3 text-lg font-semibold text-white shadow-[0_8px_18px_rgba(0,0,0,0.18)] transition hover:bg-[#1b1b1b] disabled:cursor-not-allowed disabled:opacity-100 disabled:hover:bg-[#2b2b2b]"
                 >
                   {isSubmitting ? "Processing..." : "Start Mapping"} <span aria-hidden>→</span>
                 </button>
 
-                {uploadMessage && (
-                  <p className="mt-4 text-sm text-[#4f4f4f]">{uploadMessage}</p>
-                )}
-
                 {error && (
                   <p className="mt-4 text-sm font-medium text-red-600">{error}</p>
                 )}
-
-                <p className="mt-5 text-sm text-[#6d6d6d]">Once both files are uploaded, you&apos;ll be able to map answers with questions.</p>
               </div>
             )}
 
