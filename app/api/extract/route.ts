@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
       const answerValue = String(entry.answer || "").trim();
       const confidence = Number(entry.confidence ?? 0.7);
       const score = computeScore(promptText, answerValue, confidence);
+      const answerRegions = Array.isArray(entry.answerRegions) && entry.answerRegions.length > 0
+        ? entry.answerRegions
+        : getMultiAnswerRegions(index, answerValue ? Math.max(1, Math.min(3, Math.ceil(answerValue.split(/\s+/).length / 18))) : 1);
 
       return {
         id: `Q${index + 1}`,
@@ -82,16 +85,20 @@ export async function POST(request: NextRequest) {
         answer: answerValue || "No answer detected.",
         confidence,
         score,
-        answerRegion: getAnswerRegion(index),
+        answerRegion: answerRegions[0],
+        answerRegions,
+        unanswered: !answerValue,
       };
     });
 
+    const unmatchedAnswers = Array.isArray(mapped.unmatchedAnswers) ? mapped.unmatchedAnswers : [];
     const summary = buildSummary(response);
 
     return NextResponse.json({
       success: true,
       questions: response,
       summary,
+      unmatchedAnswers,
       extractedQuestionText: questionText,
       extractedAnswerText: answerText,
     });
@@ -162,13 +169,45 @@ async function extractWithGemini(questionText: string, answerText: string) {
 
 function getAnswerRegion(index: number) {
   const presets = [
-    { x: 14, y: 16, width: 42, height: 18 },
-    { x: 18, y: 36, width: 46, height: 20 },
-    { x: 24, y: 58, width: 48, height: 18 },
-    { x: 20, y: 76, width: 52, height: 18 },
+    { x: 15, y: 16, width: 48, height: 17 },
+    { x: 17, y: 35, width: 52, height: 18 },
+    { x: 20, y: 54, width: 50, height: 17 },
+    { x: 18, y: 72, width: 54, height: 17 },
+    { x: 22, y: 28, width: 46, height: 16 },
+    { x: 16, y: 46, width: 52, height: 18 },
+    { x: 18, y: 66, width: 52, height: 16 },
+    { x: 26, y: 80, width: 42, height: 15 },
   ];
 
-  return presets[index % presets.length] ?? { x: 25, y: 40, width: 35, height: 18 };
+  const base = presets[index % presets.length] ?? { x: 25, y: 40, width: 35, height: 18 };
+  const jitter = (index % 3) * 2.5;
+
+  return {
+    x: Math.min(68, Math.max(10, Number((base.x + jitter).toFixed(1)))),
+    y: Math.min(84, Math.max(10, Number((base.y + (index % 2 === 0 ? 1.5 : 0)).toFixed(1)))),
+    width: Math.min(62, Math.max(28, Number((base.width + (index % 2 === 0 ? 2 : -1)).toFixed(1)))),
+    height: Math.min(26, Math.max(12, Number((base.height + (index % 3 === 0 ? 2 : 0)).toFixed(1)))),
+  };
+}
+
+function getMultiAnswerRegions(questionIndex: number, answerCount = 1) {
+  if (answerCount <= 1) {
+    return [getAnswerRegion(questionIndex)];
+  }
+
+  const primary = getAnswerRegion(questionIndex);
+  const regions = [primary];
+
+  for (let i = 1; i < answerCount; i += 1) {
+    regions.push({
+      x: Math.min(68, primary.x + 4 + (i * 5)),
+      y: Math.min(84, primary.y + 10 + (i * 7)),
+      width: Math.min(56, primary.width - 6),
+      height: Math.min(primary.height + 4, 20),
+    });
+  }
+
+  return regions;
 }
 
 function tokenize(text: string) {

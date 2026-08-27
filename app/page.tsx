@@ -11,14 +11,18 @@ type UploadedFile = {
   file: File;
 };
 
+type AnswerRegion = { x: number; y: number; width: number; height: number };
+
 type Question = {
   id: string;
   number: string;
   prompt: string;
   answer: string;
-  answerRegion: { x: number; y: number; width: number; height: number };
+  answerRegion: AnswerRegion | AnswerRegion[];
+  answerRegions?: AnswerRegion[];
   score: number;
   confidence: number;
+  unanswered?: boolean;
 };
 
 const demoQuestions: Question[] = [
@@ -76,7 +80,9 @@ export default function Home() {
   const [selectedQuestion, setSelectedQuestion] = useState<string>(demoQuestions[0].id);
   const [questions, setQuestions] = useState<Question[]>(demoQuestions);
   const [summary, setSummary] = useState<{ totalQuestions:number; answeredQuestions:number; unansweredQuestions:number; avgScore:number; confidence:number; status:string } | null>(null);
+  const [unmatchedAnswers, setUnmatchedAnswers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [uploadMessage, setUploadMessage] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -119,12 +125,22 @@ export default function Home() {
     setFiles(mappedFiles);
     setStage(mappedFiles.length >= 2 ? "uploaded" : "empty");
     setError(null);
+    setUploadMessage(
+      mappedFiles.length >= 2
+        ? `Uploaded ${mappedFiles.length} files successfully. Ready to map.`
+        : "One file selected. Please upload the second file to continue."
+    );
     event.target.value = "";
   };
 
   const handleRemove = (id: string) => {
     const nextFiles = files.filter((file) => file.id !== id);
     setFiles(nextFiles);
+    setUploadMessage(
+      nextFiles.length > 0
+        ? `${nextFiles.length} file${nextFiles.length > 1 ? "s" : ""} remaining. Upload the missing file to continue.`
+        : "No files uploaded yet. Please choose both files."
+    );
     if (nextFiles.length === 0) setStage("empty");
   };
 
@@ -141,6 +157,7 @@ export default function Home() {
 
     setIsSubmitting(true);
     setError(null);
+    setUploadMessage("Processing your uploaded files. Please wait while the questions and answers are extracted.");
     setStage("processing");
 
     try {
@@ -168,17 +185,21 @@ export default function Home() {
             answer: item.answer,
             score: item.score,
             confidence: item.confidence,
-            answerRegion: item.answerRegion,
+            answerRegion: item.answerRegions?.length ? item.answerRegions : item.answerRegion,
+            answerRegions: item.answerRegions || [item.answerRegion],
+            unanswered: item.unanswered,
           }))
         );
         setSelectedQuestion(result.questions[0].id);
       }
 
       setSummary(result.summary || null);
+      setUnmatchedAnswers(Array.isArray(result.unmatchedAnswers) ? result.unmatchedAnswers : []);
       setStage("mapped");
     } catch (err) {
       console.error(err);
       setError("Extraction failed. Please upload valid PDF or image files.");
+      setUploadMessage("Upload failed. Please check the files and try again.");
       setStage("uploaded");
     } finally {
       setIsSubmitting(false);
@@ -186,12 +207,17 @@ export default function Home() {
   };
 
   const activeQuestion = questions.find((question) => question.id === selectedQuestion) ?? questions[0];
+  const activeRegions = Array.isArray(activeQuestion?.answerRegion)
+    ? activeQuestion.answerRegion
+    : activeQuestion?.answerRegions?.length
+      ? activeQuestion.answerRegions
+      : [activeQuestion?.answerRegion ?? { x: 15, y: 30, width: 40, height: 18 }];
 
   return (
-    <div className="app-shell min-h-screen bg-[#3d3b39] p-3 md:p-4 lg:p-6">
+    <div className="app-shell min-h-screen bg-[#3d3b39] p-2 sm:p-3 md:p-4 lg:p-6">
       <div className="mx-auto max-w-[1500px] overflow-hidden rounded-[18px] border border-black/5 bg-[#f4f1ee] shadow-[0_18px_50px_rgba(0,0,0,0.12)]">
         <div className="flex min-h-[920px] flex-col lg:flex-row">
-          <aside className="w-full border-b border-black/5 bg-[#f0efee] p-4 lg:w-[290px] lg:border-b-0 lg:border-r">
+          <aside className="w-full border-b border-black/5 bg-[#f0efee] p-3 sm:p-4 lg:w-[290px] lg:border-b-0 lg:border-r">
             <div className="flex items-center justify-between gap-4 pb-4">
               <div className="flex items-center gap-3">
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#1f1f1f] text-lg font-bold text-white shadow-sm">
@@ -206,7 +232,7 @@ export default function Home() {
               AI Teacher&apos;s Toolkit
             </button>
 
-            <nav className="mt-8 space-y-2 text-[1.02rem] font-medium text-[#2f2f2f]">
+            <nav className="mt-6 grid gap-2 text-[0.96rem] font-medium text-[#2f2f2f] sm:mt-8 sm:text-[1.02rem]">
               {[
                 "Home",
                 "My Classroom",
@@ -263,10 +289,10 @@ export default function Home() {
             {stage === "empty" && (
               <div className="flex min-h-[760px] flex-col items-center justify-center px-8 pb-14 pt-10 text-center">
                 <div className="mb-6 flex flex-col items-center">
-                  <div className="mb-4 w-full max-w-[820px] text-center text-[2.3rem] font-black leading-none tracking-[-0.07em] text-[#1f1f1f] md:text-[3.2rem]">
+                  <div className="mb-4 w-full max-w-[820px] text-center text-[1.8rem] font-black leading-none tracking-[-0.07em] text-[#1f1f1f] sm:text-[2.2rem] md:text-[3rem] lg:text-[3.2rem]">
                     Upload <span className="text-[#f2672a]">Question Paper &amp; Answer Sheets</span>
                   </div>
-                  <p className="text-lg text-[#4a4a4a]">Upload both files to get started</p>
+                  <p className="text-base text-[#4a4a4a] sm:text-lg">Upload both files to get started</p>
                 </div>
 
                 <div className="relative mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-[#f8d7cb] ring-[18px] ring-[#f3d0c2]">
@@ -280,24 +306,24 @@ export default function Home() {
                 <div className="grid w-full max-w-[760px] gap-6 md:grid-cols-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="upload-panel rounded-[22px] border-2 border-dashed border-[#d9d4cf] bg-[#f8f7f6] p-10 text-center transition hover:border-[#e57950] hover:bg-white"
+                    className="upload-panel rounded-[22px] border-2 border-dashed border-[#d9d4cf] bg-[#f8f7f6] p-6 text-center transition hover:border-[#e57950] hover:bg-white sm:p-8 md:p-10"
                   >
-                    <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-xl bg-white text-3xl shadow-sm">⇪</div>
-                    <div className="text-[2rem] font-bold tracking-[-0.05em] text-[#1d1d1d]">
+                    <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-white text-2xl shadow-sm sm:h-14 sm:w-14 sm:text-3xl">⇪</div>
+                    <div className="text-[1.45rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.8rem] md:text-[2rem]">
                       Upload <span className="text-[#f2672a]">Question Paper</span>
                     </div>
-                    <div className="mt-2 text-sm text-[#6d6d6d]">Max 10MB</div>
+                    <div className="mt-2 text-xs text-[#6d6d6d] sm:text-sm">Max 10MB</div>
                   </button>
 
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="upload-panel rounded-[22px] border-2 border-dashed border-[#d9d4cf] bg-[#f8f7f6] p-10 text-center transition hover:border-[#e57950] hover:bg-white"
+                    className="upload-panel rounded-[22px] border-2 border-dashed border-[#d9d4cf] bg-[#f8f7f6] p-6 text-center transition hover:border-[#e57950] hover:bg-white sm:p-8 md:p-10"
                   >
-                    <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-xl bg-white text-3xl shadow-sm">⇪</div>
-                    <div className="text-[2rem] font-bold tracking-[-0.05em] text-[#1d1d1d]">
+                    <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-white text-2xl shadow-sm sm:h-14 sm:w-14 sm:text-3xl">⇪</div>
+                    <div className="text-[1.45rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.8rem] md:text-[2rem]">
                       Upload <span className="text-[#f2672a]">Answer Sheet</span>
                     </div>
-                    <div className="mt-2 text-sm text-[#6d6d6d]">Max 10MB</div>
+                    <div className="mt-2 text-xs text-[#6d6d6d] sm:text-sm">Max 10MB</div>
                   </button>
                 </div>
 
@@ -318,7 +344,7 @@ export default function Home() {
 
             {stage === "uploaded" && (
               <div className="flex min-h-[760px] flex-col items-center justify-center px-8 pb-14 pt-10 text-center">
-                <div className="mb-6 text-[2.1rem] font-black tracking-[-0.07em] text-[#1a1a1a] md:text-[3.2rem]">
+                <div className="mb-6 text-[1.7rem] font-black tracking-[-0.07em] text-[#1a1a1a] sm:text-[2.2rem] md:text-[2.8rem] lg:text-[3.2rem]">
                   Upload <span className="text-[#f2672a]">Question Paper &amp; Answer Sheets</span>
                 </div>
 
@@ -330,19 +356,25 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid w-full max-w-[760px] gap-5 md:grid-cols-2">
+                {uploadMessage && (
+                  <div className="mb-5 w-full max-w-[760px] rounded-2xl border border-[#d8ebd8] bg-[#edf9ee] px-4 py-3 text-sm font-medium text-[#1e5d2f] shadow-sm">
+                    {uploadMessage}
+                  </div>
+                )}
+
+                <div className="grid w-full max-w-[760px] gap-4 sm:gap-5 md:grid-cols-2">
                   {files.map((file) => (
                     <div
                       key={file.id}
-                      className="relative flex items-center justify-between rounded-[22px] border-2 border-[#e8e3e0] bg-[#f9f7f6] p-4 text-left shadow-sm"
+                      className="relative flex items-center justify-between rounded-[22px] border-2 border-[#e8e3e0] bg-[#f9f7f6] p-3 text-left shadow-sm sm:p-4"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="grid h-12 w-12 place-items-center rounded-lg bg-[#f2672a] text-lg font-bold text-white">
+                        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-sm font-bold text-white sm:h-12 sm:w-12 sm:text-lg">
                           {file.type === "Question Paper" ? "PDF" : "PDF"}
                         </div>
-                        <div>
-                          <div className="max-w-[190px] truncate text-lg font-semibold text-[#202020]">{file.name}</div>
-                          <div className="text-sm text-[#6b6b6b]">
+                        <div className="min-w-0">
+                          <div className="max-w-[140px] truncate text-sm font-semibold text-[#202020] sm:max-w-[180px] sm:text-base md:text-lg">{file.name}</div>
+                          <div className="text-[0.7rem] text-[#6b6b6b] sm:text-sm">
                             {formatBytes(file.size)} • {file.pages} Pages
                           </div>
                         </div>
@@ -366,6 +398,10 @@ export default function Home() {
                 >
                   {isSubmitting ? "Processing..." : "Start Mapping"} <span aria-hidden>→</span>
                 </button>
+
+                {uploadMessage && (
+                  <p className="mt-4 text-sm text-[#4f4f4f]">{uploadMessage}</p>
+                )}
 
                 {error && (
                   <p className="mt-4 text-sm font-medium text-red-600">{error}</p>
@@ -396,7 +432,7 @@ export default function Home() {
             {stage === "mapped" && (
               <div className="flex min-h-[760px] flex-col p-4 md:p-6">
                 <div className="mb-4 grid gap-4 xl:grid-cols-[1.1fr_2.3fr]">
-                  <div className="rounded-[20px] border border-black/5 bg-[#f7f5f4] p-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
+                  <div className="rounded-[20px] border border-black/5 bg-[#f7f5f4] p-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] sm:p-4">
                     <div className="mb-4 flex items-center justify-between">
                       <h2 className="text-xl font-bold text-[#1d1d1d]">Extracted Questions</h2>
                       <button className="rounded-full border border-[#d7d2ce] bg-white px-2.5 py-1 text-xs font-medium text-[#424242]">
@@ -448,6 +484,19 @@ export default function Home() {
                         </button>
                       ))}
                     </div>
+
+                    {unmatchedAnswers.length > 0 && (
+                      <div className="mt-4 rounded-[18px] border border-[#f3d8cd] bg-[#fff5f2] p-3">
+                        <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#924a35]">Unmatched answers</div>
+                        <ul className="space-y-2 text-sm leading-6 text-[#4a2a1e]">
+                          {unmatchedAnswers.map((answer, idx) => (
+                            <li key={`${answer}-${idx}`} className="rounded-xl bg-white/70 px-2 py-1.5">
+                              {answer}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
 
                   <div className="rounded-[20px] border border-black/5 bg-[#f8f6f4] p-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
@@ -465,7 +514,7 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="relative h-[560px] overflow-hidden rounded-[20px] border border-[#e3dfdc] bg-[#f1efe9] p-4">
+                    <div className="relative h-[360px] overflow-hidden rounded-[20px] border border-[#e3dfdc] bg-[#f1efe9] p-3 sm:h-[460px] sm:p-4 xl:h-[560px]">
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(255,255,255,0.85),rgba(255,255,255,0)_36%)]" />
                       <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#b3b3b3_1px,transparent_1px),linear-gradient(90deg,#b3b3b3_1px,transparent_1px)] [background-size:22px_22px]" />
 
@@ -482,23 +531,29 @@ export default function Home() {
                             <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.04),rgba(0,0,0,0.04))]" />
 
                                   {questions.map((question) => {
+                              const regions = Array.isArray(question.answerRegion)
+                                ? question.answerRegion
+                                : question.answerRegions && question.answerRegions.length > 0
+                                  ? question.answerRegions
+                                  : [question.answerRegion];
+
                               const isSelected = question.id === (activeQuestion?.id ?? question.id);
-                              return (
+                              return regions.map((region, regionIndex) => (
                                 <div
-                                  key={question.id}
+                                  key={`${question.id}-${regionIndex}`}
                                   className={`absolute border-2 ${
                                     isSelected
                                       ? "border-[#ff4c87] bg-[#ff4c87]/10 shadow-[0_0_0_2px_rgba(255,76,135,0.10)]"
                                       : "border-transparent bg-transparent"
                                   }`}
                                   style={{
-                                    left: `${question.answerRegion.x}%`,
-                                    top: `${question.answerRegion.y}%`,
-                                    width: `${question.answerRegion.width}%`,
-                                    height: `${question.answerRegion.height}%`,
+                                    left: `${region.x}%`,
+                                    top: `${region.y}%`,
+                                    width: `${region.width}%`,
+                                    height: `${region.height}%`,
                                   }}
                                 />
-                              );
+                              ));
                             })}
 
                             <div className="absolute left-6 top-12 max-w-[70%] rounded-xl bg-[#f6ece7] px-3 py-2 text-[0.72rem] leading-5 text-[#303030] shadow-sm">
@@ -548,6 +603,11 @@ export default function Home() {
                     <div className="rounded-[18px] border border-[#dfe7dc] bg-[#edf8f0] p-4 shadow-sm">
                       <div className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#4d6f56]">Answer</div>
                       <p className="text-base leading-7 text-[#212a22]">{activeQuestion?.answer ?? "No answer detected."}</p>
+                      {activeQuestion?.unanswered && (
+                        <div className="mt-3 rounded-xl border border-[#d8d8d8] bg-white/60 px-3 py-2 text-sm font-medium text-[#5b5b5b]">
+                          This question is currently unanswered.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
