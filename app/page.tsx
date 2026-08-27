@@ -219,8 +219,8 @@ export default function Home() {
   return (
     <div className="app-shell min-h-screen bg-[#3d3b39] p-2 sm:p-3 md:p-4 lg:p-6">
       <div className="mx-auto max-w-[1500px] overflow-hidden rounded-[18px] border border-black/5 bg-[#f4f1ee] shadow-[0_18px_50px_rgba(0,0,0,0.12)]">
-        <div className="flex min-h-[920px] flex-col lg:flex-row">
-          <aside className="w-full border-b border-black/5 bg-[#f0efee] p-3 sm:p-4 lg:w-[290px] lg:border-b-0 lg:border-r">
+        <div className="desktop-layout flex min-h-[920px] flex-col lg:flex-row">
+          <aside className="desktop-sidebar w-full border-b border-black/5 bg-[#f0efee] p-3 sm:p-4 lg:w-[290px] lg:border-b-0 lg:border-r">
             <div className="flex items-center justify-between gap-4 pb-4">
               <div className="flex items-center gap-3">
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#1f1f1f] text-lg font-bold text-white shadow-sm">
@@ -270,7 +270,19 @@ export default function Home() {
             </div>
           </aside>
 
-          <main className="min-h-[760px] flex-1 bg-[#f5f3f2]">
+          <main className="desktop-main min-h-[760px] flex-1 bg-[#f5f3f2]">
+            <div className="mobile-topbar hidden">
+              <button className="mobile-back" aria-label="Back">←</button>
+              <div className="mobile-brand">
+                <span className="mobile-brand-mark">V</span>
+                <span>VedaAI</span>
+              </div>
+              <div className="mobile-actions">
+                <button className="mobile-icon-btn" aria-label="Notifications">◔</button>
+                <button className="mobile-icon-btn" aria-label="Menu">☰</button>
+              </div>
+            </div>
+
             <header className="flex items-center justify-between border-b border-black/5 bg-[#f5f3f2] px-5 py-4">
               <div className="flex items-center gap-3 text-[1.02rem] font-medium text-[#202020]">
                 <button className="grid h-9 w-9 place-items-center rounded-xl bg-transparent text-lg hover:bg-black/5">←</button>
@@ -290,51 +302,56 @@ export default function Home() {
             </header>
 
             {stage === "empty" && (
-              <div className="flex min-h-[760px] flex-col items-center justify-center px-8 pb-14 pt-10 text-center">
-                <div className="mb-6 flex flex-col items-center">
-                  <div className="mb-4 w-full max-w-[820px] text-center text-[1.8rem] font-black leading-none tracking-[-0.07em] text-[#1f1f1f] sm:text-[2.2rem] md:text-[3rem] lg:text-[3.2rem]">
-                    Upload <span className="text-[#f2672a]">Question Paper &amp; Answer Sheets</span>
+              <div className="flex min-h-[760px] flex-col items-center justify-center px-6 pb-14 pt-6 text-center sm:px-8 sm:pt-8">
+                <div className="mb-5 flex flex-col items-center">
+                  <div className="mb-4 w-full max-w-[980px] text-center text-[2rem] font-black leading-[1.04] tracking-[-0.065em] text-[#1f1f1f] sm:text-[2.5rem] md:text-[3rem] lg:text-[3.2rem]">
+                    Upload <span className="inline-block rounded-[0.45em] bg-[#f9e7df] px-2 py-1 text-[#f2672a]">Question Paper &amp; Answer Sheets</span>
                   </div>
-                  <p className="text-base text-[#4a4a4a] sm:text-lg">Upload both files to get started</p>
+                  <p className="text-base text-[#525252] sm:text-lg">Upload both files to get started</p>
                 </div>
 
-                <div className="relative mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-[#f8d7cb] ring-[18px] ring-[#f3d0c2]">
+                <div className="relative mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-[#f8d7cb] ring-[18px] ring-[#f3d0c2] sm:h-32 sm:w-32">
                   <div className="absolute inset-0 rounded-full border-[2px] border-[#f2672a]/50" />
-                  <div className="absolute inset-[16px] rounded-full bg-[#f4b4a3]" />
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#f9f4f1] text-2xl shadow-sm">
+                  <div className="absolute inset-[18px] rounded-full bg-[#f4b4a3]" />
+                  <div className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-3 bottom-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute right-3 bottom-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f2672a]" />
+                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#f9f4f1] text-2xl shadow-sm sm:h-20 sm:w-20 sm:text-3xl">
                     👩‍🏫
                   </div>
                 </div>
 
-                <div className="grid w-full max-w-[760px] gap-6 md:grid-cols-2">
+                <div className="mobile-upload-stack grid w-full max-w-[760px] gap-5 md:grid-cols-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="upload-panel rounded-[22px] border-2 border-dashed border-[#d9d4cf] bg-[#f8f7f6] p-6 text-center transition hover:border-[#e57950] hover:bg-white sm:p-8 md:p-10"
+                    className="upload-panel rounded-[24px] border-2 border-dashed border-[#d8d3cf] bg-[#f7f6f5] p-6 text-center hover:border-[#f2672a] hover:bg-[#fffdfc] sm:p-8 md:p-10"
                   >
-                    <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-white text-2xl shadow-sm sm:h-14 sm:w-14 sm:text-3xl">⇪</div>
-                    <div className="text-[1.45rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.8rem] md:text-[2rem]">
+                    <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-[#f9f1ee] text-2xl text-[#f2672a] shadow-sm ring-1 ring-[#f4d4c6] sm:h-14 sm:w-14 sm:text-3xl">⇪</div>
+                    <div className="text-[1.35rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.7rem] md:text-[1.9rem]">
                       Upload <span className="text-[#f2672a]">Question Paper</span>
                     </div>
-                    <div className="mt-2 text-xs text-[#6d6d6d] sm:text-sm">Max 10MB</div>
+                    <div className="mt-2 text-xs text-[#666] sm:text-sm">Max 10MB</div>
                   </button>
 
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="upload-panel rounded-[22px] border-2 border-dashed border-[#d9d4cf] bg-[#f8f7f6] p-6 text-center transition hover:border-[#e57950] hover:bg-white sm:p-8 md:p-10"
+                    className="upload-panel rounded-[24px] border-2 border-dashed border-[#d8d3cf] bg-[#f7f6f5] p-6 text-center hover:border-[#f2672a] hover:bg-[#fffdfc] sm:p-8 md:p-10"
                   >
-                    <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-white text-2xl shadow-sm sm:h-14 sm:w-14 sm:text-3xl">⇪</div>
-                    <div className="text-[1.45rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.8rem] md:text-[2rem]">
+                    <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-[#f9f1ee] text-2xl text-[#f2672a] shadow-sm ring-1 ring-[#f4d4c6] sm:h-14 sm:w-14 sm:text-3xl">⇪</div>
+                    <div className="text-[1.35rem] font-bold tracking-[-0.05em] text-[#1d1d1d] sm:text-[1.7rem] md:text-[1.9rem]">
                       Upload <span className="text-[#f2672a]">Answer Sheet</span>
                     </div>
-                    <div className="mt-2 text-xs text-[#6d6d6d] sm:text-sm">Max 10MB</div>
+                    <div className="mt-2 text-xs text-[#666] sm:text-sm">Max 10MB</div>
                   </button>
                 </div>
 
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2b2b2b] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#1b1b1b]"
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2b2b2b] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#1b1b1b] active:translate-y-px"
                 >
-                  Choose files
+                  Start Mapping <span aria-hidden>→</span>
                 </button>
 
                 <p className="mt-5 text-sm text-[#6d6d6d]">
@@ -346,15 +363,23 @@ export default function Home() {
             )}
 
             {stage === "uploaded" && (
-              <div className="flex min-h-[760px] flex-col items-center justify-center px-8 pb-14 pt-10 text-center">
-                <div className="mb-6 text-[1.7rem] font-black tracking-[-0.07em] text-[#1a1a1a] sm:text-[2.2rem] md:text-[2.8rem] lg:text-[3.2rem]">
-                  Upload <span className="text-[#f2672a]">Question Paper &amp; Answer Sheets</span>
+              <div className="flex min-h-[760px] flex-col items-center justify-center px-6 pb-14 pt-6 text-center sm:px-8 sm:pt-8">
+                <div className="mb-5 flex flex-col items-center">
+                  <div className="mb-4 w-full max-w-[980px] text-center text-[2rem] font-black leading-[1.04] tracking-[-0.065em] text-[#1f1f1f] sm:text-[2.5rem] md:text-[3rem] lg:text-[3.2rem]">
+                    Upload <span className="inline-block rounded-[0.45em] bg-[#f9e7df] px-2 py-1 text-[#f2672a]">Question Paper &amp; Answer Sheets</span>
+                  </div>
+                  <p className="text-base text-[#525252] sm:text-lg">Upload both files to get started</p>
                 </div>
 
-                <div className="relative mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-[#f8d7cb] ring-[18px] ring-[#f3d0c2]">
+                <div className="relative mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-[#f8d7cb] ring-[18px] ring-[#f3d0c2] sm:h-32 sm:w-32">
                   <div className="absolute inset-0 rounded-full border-[2px] border-[#f2672a]/50" />
-                  <div className="absolute inset-[16px] rounded-full bg-[#f4b4a3]" />
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#f9f4f1] text-2xl shadow-sm">
+                  <div className="absolute inset-[18px] rounded-full bg-[#f4b4a3]" />
+                  <div className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-3 bottom-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute right-3 bottom-2 h-2.5 w-2.5 rounded-full bg-[#f2672a]" />
+                  <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f2672a]" />
+                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#f9f4f1] text-2xl shadow-sm sm:h-20 sm:w-20 sm:text-3xl">
                     👩‍🏫
                   </div>
                 </div>
@@ -365,19 +390,19 @@ export default function Home() {
                   </div>
                 )}
 
-                <div className="grid w-full max-w-[760px] gap-4 sm:gap-5 md:grid-cols-2">
+                <div className="mobile-upload-stack grid w-full max-w-[760px] gap-4 sm:gap-5 md:grid-cols-2">
                   {files.map((file) => (
                     <div
                       key={file.id}
-                      className="relative flex items-center justify-between rounded-[22px] border-2 border-[#e8e3e0] bg-[#f9f7f6] p-3 text-left shadow-sm sm:p-4"
+                      className="mobile-upload-card relative flex items-center justify-between rounded-[22px] border-[2px] border-dashed border-[#d8d3cf] bg-[#f8f7f5] px-4 py-3 text-left shadow-sm sm:px-5 sm:py-4"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-sm font-bold text-white sm:h-12 sm:w-12 sm:text-lg">
-                          {file.type === "Question Paper" ? "PDF" : "PDF"}
+                        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-xs">
+                          PDF
                         </div>
                         <div className="min-w-0">
-                          <div className="max-w-[140px] truncate text-sm font-semibold text-[#202020] sm:max-w-[180px] sm:text-base md:text-lg">{file.name}</div>
-                          <div className="text-[0.7rem] text-[#6b6b6b] sm:text-sm">
+                          <div className="truncate text-sm font-semibold text-[#202020] sm:text-base">{file.name}</div>
+                          <div className="mt-1 text-[0.7rem] text-[#6b6b6b] sm:text-xs">
                             {formatBytes(file.size)} • {file.pages} Pages
                           </div>
                         </div>
@@ -385,7 +410,7 @@ export default function Home() {
 
                       <button
                         onClick={() => handleRemove(file.id)}
-                        className="grid h-8 w-8 place-items-center rounded-full bg-[#fce4dd] text-lg text-[#f2672a]"
+                        className="grid h-8 w-8 place-items-center rounded-full bg-[#2e2e2e] text-lg text-white shadow-sm transition hover:bg-[#1d1d1d]"
                         aria-label={`Remove ${file.name}`}
                       >
                         ×
@@ -397,7 +422,7 @@ export default function Home() {
                 <button
                   onClick={startMapping}
                   disabled={!hasBothFiles || isSubmitting}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#2a2a2a]"
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#2a2a2a]"
                 >
                   {isSubmitting ? "Processing..." : "Start Mapping"} <span aria-hidden>→</span>
                 </button>
