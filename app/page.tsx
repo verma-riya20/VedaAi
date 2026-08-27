@@ -390,33 +390,63 @@ export default function Home() {
                   </div>
                 )}
 
-                <div className="mobile-upload-stack grid w-full max-w-[760px] gap-4 sm:gap-5 md:grid-cols-2">
-                  {files.map((file) => (
-                    <div
-                      key={file.id}
-                      className="mobile-upload-card relative flex items-center justify-between rounded-[22px] border-[2px] border-dashed border-[#d8d3cf] bg-[#f8f7f5] px-4 py-3 text-left shadow-sm sm:px-5 sm:py-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-xs">
-                          PDF
-                        </div>
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-semibold text-[#202020] sm:text-base">{file.name}</div>
-                          <div className="mt-1 text-[0.7rem] text-[#6b6b6b] sm:text-xs">
-                            {formatBytes(file.size)} • {file.pages} Pages
+                <div className="w-full max-w-[760px]">
+                  {files.length === 1 && (
+                    <div className="mx-auto w-full max-w-[520px] rounded-[22px] border-[2px] border-dashed border-[#d8d3cf] bg-[#f8f7f5] px-4 py-3 text-left shadow-sm sm:px-5 sm:py-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-xs">
+                            PDF
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold text-[#202020] sm:text-base">{files[0].name}</div>
+                            <div className="mt-1 text-[0.7rem] text-[#6b6b6b] sm:text-xs">
+                              {formatBytes(files[0].size)} • {files[0].pages} Pages
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <button
-                        onClick={() => handleRemove(file.id)}
-                        className="grid h-8 w-8 place-items-center rounded-full bg-[#2e2e2e] text-lg text-white shadow-sm transition hover:bg-[#1d1d1d]"
-                        aria-label={`Remove ${file.name}`}
-                      >
-                        ×
-                      </button>
+                        <button
+                          onClick={() => handleRemove(files[0].id)}
+                          className="grid h-8 w-8 place-items-center rounded-full bg-[#2e2e2e] text-lg text-white shadow-sm transition hover:bg-[#1d1d1d]"
+                          aria-label={`Remove ${files[0].name}`}
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  {files.length >= 2 && (
+                    <div className="grid gap-4 sm:gap-5 md:grid-cols-2">
+                      {files.map((file) => (
+                        <div
+                          key={file.id}
+                          className="relative flex items-center justify-between rounded-[22px] border-[2px] border-dashed border-[#d8d3cf] bg-[#f8f7f5] px-4 py-3 text-left shadow-sm sm:px-5 sm:py-4"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#f2672a] text-[0.7rem] font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-xs">
+                              PDF
+                            </div>
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-semibold text-[#202020] sm:text-base">{file.name}</div>
+                              <div className="mt-1 text-[0.7rem] text-[#6b6b6b] sm:text-xs">
+                                {formatBytes(file.size)} • {file.pages} Pages
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleRemove(file.id)}
+                            className="grid h-8 w-8 place-items-center rounded-full bg-[#2e2e2e] text-lg text-white shadow-sm transition hover:bg-[#1d1d1d]"
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <button
