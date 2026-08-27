@@ -1,0 +1,5 @@
+- Project: VedaAI assessment extraction demo
+- Stack: Next.js, TypeScript, Tailwind CSS
+- Goal: build a polished upload and answer-mapping experience aligned to the provided assignment design
+- Verification: run npm run build before completion
+- Notes: keep the implementation in a single UI flow with upload, extraction progress, and mapped question/answer review
